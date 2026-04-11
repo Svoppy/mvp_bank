@@ -1,22 +1,19 @@
-"""
-URL configuration for config project.
+from ninja import NinjaAPI
+from apps.auth_app.api import router as auth_router
+from apps.loans.api import router as loans_router
+from apps.audit.api import router as audit_router
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
+api = NinjaAPI(
+    title="MVP Bank — Credit Approval API",
+    version="1.0.0",
+    description="Banking credit approval and monitoring system",
+)
+
+api.add_router("/auth", auth_router)
+api.add_router("/loans", loans_router)
+api.add_router("/audit", audit_router)
+
 from django.urls import path
-
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("api/", api.urls),
 ]

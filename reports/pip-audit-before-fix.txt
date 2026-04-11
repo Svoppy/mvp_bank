@@ -1,0 +1,3 @@
+django 5.1.4: 12 known vulnerabilities reported by pip-audit on 2026-04-11.
+PyJWT 2.10.1: 1 known vulnerability reported by pip-audit on 2026-04-11.
+Recommended fixed versions from audit output: django 5.1.15, PyJWT 2.12.0.
