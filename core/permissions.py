@@ -13,6 +13,10 @@ class JWTAuth(HttpBearer):
     Reads 'Authorization: Bearer <token>', validates JWT,
     and returns the active User instance (stored in request.auth).
     """
+    openapi_bearerFormat = "JWT"
+    openapi_description = (
+        "Provide the access token received from /api/auth/login or /api/auth/refresh."
+    )
 
     def authenticate(self, request, token: str):
         payload = decode_token(token)

@@ -96,3 +96,29 @@ class AuthApiTests(TestCase):
         )
 
         self.assertEqual(blocked_response.status_code, 429)
+
+    def test_swagger_docs_and_openapi_publish_all_mvp_routes(self):
+        docs_response = self.client.get("/api/docs")
+        self.assertEqual(docs_response.status_code, 200)
+        self.assertContains(docs_response, "swagger-ui")
+
+        schema_response = self.client.get("/api/openapi.json")
+        self.assertEqual(schema_response.status_code, 200)
+
+        schema = schema_response.json()
+        self.assertEqual(schema["info"]["title"], "MVP Bank - Credit Approval API")
+        self.assertIn("/api/auth/login", schema["paths"])
+        self.assertIn("/api/auth/register", schema["paths"])
+        self.assertIn("/api/auth/refresh", schema["paths"])
+        self.assertIn("/api/auth/logout", schema["paths"])
+        self.assertIn("/api/auth/me", schema["paths"])
+        self.assertIn("/api/loans/apply", schema["paths"])
+        self.assertIn("/api/loans/", schema["paths"])
+        self.assertIn("/api/loans/{loan_id}", schema["paths"])
+        self.assertIn("/api/loans/{loan_id}/decision", schema["paths"])
+        self.assertIn("/api/audit/logs", schema["paths"])
+
+        security_schemes = schema["components"]["securitySchemes"].values()
+        self.assertTrue(
+            any(item.get("type") == "http" and item.get("scheme") == "bearer" for item in security_schemes)
+        )

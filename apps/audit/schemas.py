@@ -14,4 +14,19 @@ class AuditLogOut(BaseModel):
     details: Any
 
     class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 12,
+                "user_id": 3,
+                "action": "LOAN_APPROVED",
+                "entity_type": "CreditApplication",
+                "entity_id": 8,
+                "ip_address": "127.0.0.1",
+                "timestamp": "2026-04-11T10:15:00Z",
+                "details": {
+                    "new_status": "APPROVED",
+                    "client_id": 5,
+                },
+            }
+        }
         from_attributes = True

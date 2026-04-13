@@ -30,6 +30,7 @@ from apps.auth_app.services import (
     revoke_token,
 )
 from apps.audit.service import log_action
+from core.schemas import ErrorOut
 from core.security import (
     create_access_token,
     create_refresh_token,
@@ -45,7 +46,17 @@ logger = logging.getLogger(__name__)
 router = Router(tags=["Auth"])
 
 
-@router.post("/register", response={201: UserOut}, auth=None)
+@router.post(
+    "/register",
+    response={201: UserOut, 400: ErrorOut},
+    auth=None,
+    operation_id="registerClient",
+    summary="Register a client",
+    description=(
+        "Creates a new CLIENT account with a hashed password. "
+        "The endpoint uses neutral validation errors and never reveals whether the email already exists."
+    ),
+)
 def register(request: HttpRequest, data: RegisterIn):
     """Register a new client account."""
     email = normalize_email(data.email)
@@ -73,7 +84,17 @@ def register(request: HttpRequest, data: RegisterIn):
     return 201, user
 
 
-@router.post("/login", response=TokenOut, auth=None)
+@router.post(
+    "/login",
+    response={200: TokenOut, 401: ErrorOut, 429: ErrorOut},
+    auth=None,
+    operation_id="loginUser",
+    summary="Login and issue JWT tokens",
+    description=(
+        "Authenticates the user and returns a short-lived access token plus a refresh token. "
+        "Repeated failed attempts are rate-limited on the server side."
+    ),
+)
 def login(request: HttpRequest, data: LoginIn):
     """Authenticate and return JWT access + refresh tokens."""
     email = normalize_email(data.email)
@@ -116,7 +137,17 @@ def login(request: HttpRequest, data: LoginIn):
     return TokenOut(access_token=access, refresh_token=refresh)
 
 
-@router.post("/refresh", response=TokenOut, auth=None)
+@router.post(
+    "/refresh",
+    response={200: TokenOut, 401: ErrorOut},
+    auth=None,
+    operation_id="refreshTokenPair",
+    summary="Rotate refresh token",
+    description=(
+        "Accepts a valid refresh token, revokes it, and issues a fresh access/refresh pair. "
+        "Replay of an already used refresh token is rejected."
+    ),
+)
 def refresh_tokens(request: HttpRequest, data: RefreshIn):
     """Rotate a refresh token and return a fresh access/refresh pair."""
     payload = decode_token(data.refresh_token)
@@ -142,7 +173,16 @@ def refresh_tokens(request: HttpRequest, data: RefreshIn):
     return TokenOut(access_token=access, refresh_token=refresh)
 
 
-@router.post("/logout", response=MessageOut, auth=jwt_auth)
+@router.post(
+    "/logout",
+    response={200: MessageOut, 401: ErrorOut},
+    auth=jwt_auth,
+    operation_id="logoutUser",
+    summary="Logout and revoke tokens",
+    description=(
+        "Revokes the current access token and, if provided, the matching refresh token for the same user."
+    ),
+)
 def logout(request: HttpRequest, data: LogoutIn):
     """Invalidate the current access token and optionally the supplied refresh token."""
     user: User = request.auth
@@ -169,7 +209,14 @@ def logout(request: HttpRequest, data: LogoutIn):
     return MessageOut(message="Logged out")
 
 
-@router.get("/me", response=UserOut, auth=jwt_auth)
+@router.get(
+    "/me",
+    response={200: UserOut, 401: ErrorOut},
+    auth=jwt_auth,
+    operation_id="getCurrentUserProfile",
+    summary="Get current user profile",
+    description="Returns the authenticated user's profile without password hashes, tokens, or internal flags.",
+)
 def me(request: HttpRequest):
     """Return the authenticated user's own profile. No sensitive fields."""
     return request.auth

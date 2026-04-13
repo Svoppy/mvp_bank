@@ -1,0 +1,2 @@
+[11/Apr/2026 16:03:29] "GET /api/openapi.json HTTP/1.1" 200 9248
+[11/Apr/2026 16:03:29,771] - Broken pipe from ('127.0.0.1', 62601)

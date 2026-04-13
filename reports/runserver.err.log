@@ -1,0 +1,35 @@
+=sqlite : Имя "=sqlite" не распознано как имя командлета, функции, файла сценария или выполняемой программы. Проверьте 
+правильность написания имени, а также наличие и правильность пути, после чего повторите попытку.
+строка:1 знак:1
++ ='sqlite'; ='C:/projects/aitu/isscv/mvp3/mvp_bank/db.sqlite3'; python ...
++ ~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=sqlite:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+=C:/projects/aitu/isscv/mvp3/mvp_bank/db.sqlite3 : Имя "=C:/projects/aitu/isscv/mvp3/mvp_bank/db.sqlite3" не 
+распознано как имя командлета, функции, файла сценария или выполняемой программы. Проверьте правильность написания 
+имени, а также наличие и правильность пути, после чего повторите попытку.
+строка:1 знак:12
++ ='sqlite'; ='C:/projects/aitu/isscv/mvp3/mvp_bank/db.sqlite3'; python ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=C:/projects/ai...bank/db.sqlite3:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+2026-04-11 15:58:26,040 INFO django.utils.autoreload Watching for file changes with StatReloader
+2026-04-11 15:58:28,671 WARNING django.request Not Found: /api/
+[11/Apr/2026 15:58:28] "GET /api/ HTTP/1.1" 404 179
+[11/Apr/2026 15:58:28,705] - Broken pipe from ('127.0.0.1', 62605)
+[11/Apr/2026 15:58:46] "GET /api/openapi.json HTTP/1.1" 200 9248
+[11/Apr/2026 15:58:46,060] - Broken pipe from ('127.0.0.1', 64788)
+2026-04-11 16:27:55,322 INFO django.utils.autoreload C:\projects\aitu\isscv\mvp3\mvp_bank\config\settings.py changed, reloading.
+2026-04-11 16:27:56,397 INFO django.utils.autoreload Watching for file changes with StatReloader
+2026-04-11 16:28:05,937 INFO django.utils.autoreload C:\projects\aitu\isscv\mvp3\mvp_bank\config\urls.py changed, reloading.
+2026-04-11 16:28:06,968 INFO django.utils.autoreload Watching for file changes with StatReloader
+2026-04-11 16:28:26,897 INFO django.utils.autoreload C:\projects\aitu\isscv\mvp3\mvp_bank\apps\auth_app\schemas.py changed, reloading.
+2026-04-11 16:28:27,958 INFO django.utils.autoreload Watching for file changes with StatReloader
+2026-04-11 16:28:41,684 INFO django.utils.autoreload C:\projects\aitu\isscv\mvp3\mvp_bank\apps\loans\schemas.py changed, reloading.
+2026-04-11 16:28:42,962 INFO django.utils.autoreload Watching for file changes with StatReloader
+2026-04-11 16:32:02,931 INFO django.utils.autoreload C:\projects\aitu\isscv\mvp3\mvp_bank\core\permissions.py changed, reloading.
+2026-04-11 16:32:03,791 INFO django.utils.autoreload Watching for file changes with StatReloader
+2026-04-11 16:37:00,374 INFO django.utils.autoreload C:\projects\aitu\isscv\mvp3\mvp_bank\apps\loans\api.py changed, reloading.
+2026-04-11 16:37:01,395 INFO django.utils.autoreload Watching for file changes with StatReloader

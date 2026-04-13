@@ -34,6 +34,17 @@ class RegisterIn(BaseModel):
             raise ValueError("Invalid characters in full_name")
         return v.strip()
 
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "email": "client@example.com",
+                    "password": "Aa1!ClientPass99",
+                    "full_name": "Client User",
+                }
+            ]
+        }
+
 
 class LoginIn(BaseModel):
     email: EmailStr
@@ -44,23 +55,67 @@ class LoginIn(BaseModel):
     def normalize_email(cls, value: EmailStr) -> str:
         return str(value).strip().lower()
 
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "email": "client@example.com",
+                    "password": "Aa1!ClientPass99",
+                }
+            ]
+        }
+
 
 class RefreshIn(BaseModel):
     refresh_token: str = Field(min_length=20, max_length=4096)
+
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "refresh_token": "paste_refresh_token_here",
+                }
+            ]
+        }
 
 
 class LogoutIn(BaseModel):
     refresh_token: str | None = Field(default=None, min_length=20, max_length=4096)
 
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "refresh_token": "paste_refresh_token_here",
+                }
+            ]
+        }
+
 
 class MessageOut(BaseModel):
     message: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Logged out",
+            }
+        }
 
 
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     refresh_token: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.access",
+                "token_type": "bearer",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh",
+            }
+        }
 
 
 class UserOut(BaseModel):
@@ -71,4 +126,13 @@ class UserOut(BaseModel):
     is_active: bool
 
     class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "email": "client@example.com",
+                "role": "CLIENT",
+                "full_name": "Client User",
+                "is_active": True,
+            }
+        }
         from_attributes = True

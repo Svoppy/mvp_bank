@@ -27,6 +27,19 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+            ]
+        },
+    }
+]
+
 DB_ENGINE = os.environ.get("DB_ENGINE", "postgresql").lower()
 
 if "test" in sys.argv:

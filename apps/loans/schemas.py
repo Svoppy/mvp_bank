@@ -15,6 +15,17 @@ class LoanApplyIn(BaseModel):
             raise ValueError("Invalid characters in purpose")
         return v.strip()
 
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "amount": "350000.00",
+                    "term_months": 24,
+                    "purpose": "Home renovation",
+                }
+            ]
+        }
+
 
 class DecisionIn(BaseModel):
     status: str = Field(pattern="^(APPROVED|REJECTED)$")
@@ -27,6 +38,16 @@ class DecisionIn(BaseModel):
             raise ValueError("Invalid characters in comment")
         return v.strip()
 
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "status": "APPROVED",
+                    "comment": "Stable income and positive credit history.",
+                }
+            ]
+        }
+
 
 class LoanOut(BaseModel):
     id: int
@@ -38,4 +59,15 @@ class LoanOut(BaseModel):
     updated_at: datetime
 
     class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "amount": "350000.00",
+                "term_months": 24,
+                "purpose": "Home renovation",
+                "status": "PENDING",
+                "created_at": "2026-04-11T10:00:00Z",
+                "updated_at": "2026-04-11T10:00:00Z",
+            }
+        }
         from_attributes = True

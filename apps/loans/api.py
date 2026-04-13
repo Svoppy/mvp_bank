@@ -16,6 +16,7 @@ from apps.auth_app.models import User
 from apps.loans.models import CreditApplication, ApplicationStatus
 from apps.loans.schemas import LoanApplyIn, DecisionIn, LoanOut
 from apps.audit.service import log_action
+from core.schemas import ErrorOut
 from core.permissions import jwt_auth, get_manager_user
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,16 @@ logger = logging.getLogger(__name__)
 router = Router(tags=["Loans"], auth=jwt_auth)
 
 
-@router.post("/apply", response={201: LoanOut})
+@router.post(
+    "/apply",
+    response={201: LoanOut, 403: ErrorOut},
+    operation_id="applyForLoan",
+    summary="Submit a credit application",
+    description=(
+        "Creates a new credit application for the authenticated CLIENT. "
+        "Managers and admins cannot use this endpoint."
+    ),
+)
 def apply_loan(request: HttpRequest, data: LoanApplyIn):
     """Client submits a new credit application."""
     user: User = request.auth
@@ -49,7 +59,16 @@ def apply_loan(request: HttpRequest, data: LoanApplyIn):
     return 201, loan
 
 
-@router.get("/", response=List[LoanOut])
+@router.get(
+    "/",
+    response={200: List[LoanOut], 403: ErrorOut},
+    operation_id="listLoanApplications",
+    summary="List loan applications",
+    description=(
+        "CLIENT sees only own applications. MANAGER sees all applications. "
+        "ADMIN access is denied to preserve role separation."
+    ),
+)
 def list_loans(request: HttpRequest):
     """
     CLIENT: returns only their own applications.
@@ -65,7 +84,16 @@ def list_loans(request: HttpRequest):
     return list(qs)
 
 
-@router.get("/{loan_id}", response=LoanOut)
+@router.get(
+    "/{loan_id}",
+    response={200: LoanOut, 403: ErrorOut, 404: ErrorOut},
+    operation_id="getLoanApplication",
+    summary="Get one loan application",
+    description=(
+        "Returns a single application with object-level authorization. "
+        "A client requesting another client's record receives 404 to avoid information disclosure."
+    ),
+)
 def get_loan(request: HttpRequest, loan_id: int):
     """
     Get a single application.
@@ -77,7 +105,16 @@ def get_loan(request: HttpRequest, loan_id: int):
     return loan
 
 
-@router.patch("/{loan_id}/decision", response=LoanOut)
+@router.patch(
+    "/{loan_id}/decision",
+    response={200: LoanOut, 403: ErrorOut, 404: ErrorOut, 409: ErrorOut},
+    operation_id="makeLoanDecision",
+    summary="Approve or reject an application",
+    description=(
+        "MANAGER-only endpoint for making a final decision on a pending application. "
+        "The decision is written to the audit log."
+    ),
+)
 def make_decision(request: HttpRequest, loan_id: int, data: DecisionIn):
     """Manager approves or rejects an application."""
     manager: User = get_manager_user(request)
