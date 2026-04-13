@@ -8,8 +8,9 @@ Loan endpoints:
 import logging
 from typing import List
 
-from ninja import Router
+from ninja import Router, Query
 from ninja.errors import HttpError
+from django.db import transaction
 from django.http import HttpRequest
 
 from apps.auth_app.models import User
@@ -17,6 +18,7 @@ from apps.loans.models import CreditApplication, ApplicationStatus
 from apps.loans.schemas import LoanApplyIn, DecisionIn, LoanOut
 from apps.audit.service import log_action
 from core.schemas import ErrorOut
+from core.network import get_client_ip
 from core.permissions import jwt_auth, get_manager_user
 
 logger = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ def apply_loan(request: HttpRequest, data: LoanApplyIn):
         action="LOAN_APPLY",
         entity_type="CreditApplication",
         entity_id=loan.pk,
-        ip_address=_get_ip(request),
+        ip_address=get_client_ip(request),
         details={"amount": str(data.amount), "term_months": data.term_months},
     )
     logger.info("Loan application submitted: loan_id=%s client_id=%s", loan.pk, user.pk)
@@ -69,7 +71,11 @@ def apply_loan(request: HttpRequest, data: LoanApplyIn):
         "ADMIN access is denied to preserve role separation."
     ),
 )
-def list_loans(request: HttpRequest):
+def list_loans(
+    request: HttpRequest,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=100),
+):
     """
     CLIENT: returns only their own applications.
     MANAGER: returns all applications.
@@ -81,7 +87,8 @@ def list_loans(request: HttpRequest):
         qs = CreditApplication.objects.all().order_by("-created_at")
     else:
         raise HttpError(403, "Forbidden: insufficient permissions")
-    return list(qs)
+    offset = (page - 1) * page_size
+    return list(qs[offset : offset + page_size])
 
 
 @router.get(
@@ -118,22 +125,23 @@ def get_loan(request: HttpRequest, loan_id: int):
 def make_decision(request: HttpRequest, loan_id: int, data: DecisionIn):
     """Manager approves or rejects an application."""
     manager: User = get_manager_user(request)
-    loan = _get_loan_or_404(loan_id)
+    with transaction.atomic():
+        loan = _get_loan_or_404(loan_id, for_update=True)
 
-    if loan.status != ApplicationStatus.PENDING:
-        raise HttpError(409, "Application has already been decided")
+        if loan.status != ApplicationStatus.PENDING:
+            raise HttpError(409, "Application has already been decided")
 
-    loan.status = data.status
-    loan.manager = manager
-    loan.decision_comment = data.comment
-    loan.save(update_fields=["status", "manager", "decision_comment", "updated_at"])
+        loan.status = data.status
+        loan.manager = manager
+        loan.decision_comment = data.comment
+        loan.save(update_fields=["status", "manager", "decision_comment", "updated_at"])
 
     log_action(
         user=manager,
         action=f"LOAN_{data.status}",
         entity_type="CreditApplication",
         entity_id=loan.pk,
-        ip_address=_get_ip(request),
+        ip_address=get_client_ip(request),
         details={"new_status": data.status, "client_id": loan.client_id},
     )
     logger.info(
@@ -145,9 +153,12 @@ def make_decision(request: HttpRequest, loan_id: int, data: DecisionIn):
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-def _get_loan_or_404(loan_id: int) -> CreditApplication:
+def _get_loan_or_404(loan_id: int, *, for_update: bool = False) -> CreditApplication:
     try:
-        return CreditApplication.objects.get(pk=loan_id)
+        queryset = CreditApplication.objects
+        if for_update:
+            queryset = queryset.select_for_update()
+        return queryset.get(pk=loan_id)
     except CreditApplication.DoesNotExist:
         raise HttpError(404, "Application not found")
 
@@ -163,10 +174,3 @@ def _assert_can_view(user: User, loan: CreditApplication) -> None:
 
     if user.role != "CLIENT":
         raise HttpError(403, "Forbidden: insufficient permissions")
-
-
-def _get_ip(request: HttpRequest) -> str | None:
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")

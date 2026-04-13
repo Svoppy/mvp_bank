@@ -15,43 +15,34 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-def _scope_key(email: str, ip_address: str | None) -> str:
-    return f"{normalize_email(email)}|{ip_address or 'unknown'}"
+def _scope_targets(email: str, ip_address: str | None) -> list[tuple[str, str | None]]:
+    normalized_email = normalize_email(email)
+    return [
+        (f"email:{normalized_email}", None),
+        (f"email_ip:{normalized_email}|{ip_address or 'unknown'}", ip_address),
+    ]
 
 
 def is_login_blocked(email: str, ip_address: str | None) -> bool:
-    record = LoginThrottle.objects.filter(scope_key=_scope_key(email, ip_address)).first()
-    if record is None or record.blocked_until is None:
-        return False
-    return record.blocked_until > timezone.now()
-
-
-@transaction.atomic
-def register_login_failure(email: str, ip_address: str | None) -> LoginThrottle:
+    scope_keys = [scope_key for scope_key, _ in _scope_targets(email, ip_address)]
     now = timezone.now()
-    email = normalize_email(email)
-    scope_key = _scope_key(email, ip_address)
-    record = LoginThrottle.objects.select_for_update().filter(scope_key=scope_key).first()
+    return LoginThrottle.objects.filter(
+        scope_key__in=scope_keys,
+        blocked_until__gt=now,
+    ).exists()
 
-    if record is None:
-        return LoginThrottle.objects.create(
-            scope_key=scope_key,
-            email=email,
-            ip_address=ip_address,
-            failure_count=1,
-            first_failure_at=now,
-            last_failure_at=now,
-        )
 
+def _update_failure_record(record: LoginThrottle, now) -> None:
     if record.blocked_until and record.blocked_until > now:
         record.last_failure_at = now
         record.save(update_fields=["last_failure_at", "updated_at"])
-        return record
+        return
 
     window_start = record.first_failure_at or now
     if window_start + LOGIN_WINDOW < now:
         record.failure_count = 0
         record.first_failure_at = now
+        record.blocked_until = None
 
     record.failure_count += 1
     record.last_failure_at = now
@@ -68,11 +59,39 @@ def register_login_failure(email: str, ip_address: str | None) -> LoginThrottle:
             "updated_at",
         ]
     )
-    return record
+
+
+@transaction.atomic
+def register_login_failure(email: str, ip_address: str | None) -> LoginThrottle:
+    now = timezone.now()
+    normalized_email = normalize_email(email)
+    primary_record: LoginThrottle | None = None
+
+    for scope_key, scope_ip in _scope_targets(normalized_email, ip_address):
+        record = LoginThrottle.objects.select_for_update().filter(scope_key=scope_key).first()
+        if record is None:
+            record = LoginThrottle.objects.create(
+                scope_key=scope_key,
+                email=normalized_email,
+                ip_address=scope_ip,
+                failure_count=1,
+                first_failure_at=now,
+                last_failure_at=now,
+            )
+        else:
+            _update_failure_record(record, now)
+
+        if primary_record is None:
+            primary_record = record
+
+    if primary_record is None:
+        raise RuntimeError("Login throttle update failed")
+    return primary_record
 
 
 def reset_login_failures(email: str, ip_address: str | None) -> None:
-    LoginThrottle.objects.filter(scope_key=_scope_key(email, ip_address)).delete()
+    scope_keys = [scope_key for scope_key, _ in _scope_targets(email, ip_address)]
+    LoginThrottle.objects.filter(scope_key__in=scope_keys).delete()
 
 
 def is_token_revoked(token_id: str) -> bool:
@@ -88,21 +107,21 @@ def revoke_token(
     payload: dict,
     user: User | None,
     reason: str,
-) -> None:
+) -> bool:
     token_id = payload.get("jti")
     token_type = payload.get("type")
     exp = payload.get("exp")
     if token_id is None or token_type is None or exp is None:
-        return
+        return False
 
     try:
         token_uuid = UUID(str(token_id))
     except (TypeError, ValueError):
-        return
+        return False
 
     expires_at = datetime.fromtimestamp(int(exp), tz=dt_timezone.utc)
 
-    RevokedToken.objects.get_or_create(
+    _, created = RevokedToken.objects.get_or_create(
         jti=token_uuid,
         defaults={
             "user": user,
@@ -111,3 +130,4 @@ def revoke_token(
             "expires_at": expires_at,
         },
     )
+    return created

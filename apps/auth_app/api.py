@@ -10,6 +10,7 @@ import logging
 
 from ninja import Router
 from ninja.errors import HttpError
+from django.db import transaction
 from django.http import HttpRequest
 
 from apps.auth_app.models import User, Role
@@ -40,6 +41,7 @@ from core.security import (
     verify_password,
 )
 from core.permissions import jwt_auth
+from core.network import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +79,7 @@ def register(request: HttpRequest, data: RegisterIn):
         action="USER_REGISTER",
         entity_type="User",
         entity_id=user.pk,
-        ip_address=_get_ip(request),
+        ip_address=get_client_ip(request),
         details={"role": user.role},
     )
     logger.info("New client registered: user_id=%s", user.pk)
@@ -98,7 +100,7 @@ def register(request: HttpRequest, data: RegisterIn):
 def login(request: HttpRequest, data: LoginIn):
     """Authenticate and return JWT access + refresh tokens."""
     email = normalize_email(data.email)
-    ip_address = _get_ip(request)
+    ip_address = get_client_ip(request)
 
     if is_login_blocked(email, ip_address):
         log_action(
@@ -159,15 +161,17 @@ def refresh_tokens(request: HttpRequest, data: RefreshIn):
     except (User.DoesNotExist, KeyError, ValueError):
         raise HttpError(401, "Invalid token")
 
-    revoke_token(payload=payload, user=user, reason="refresh_rotated")
-
-    access = create_access_token(user.pk, user.role)
-    refresh = create_refresh_token(user.pk)
+    with transaction.atomic():
+        # Protect against refresh-token replay races.
+        if not revoke_token(payload=payload, user=user, reason="refresh_rotated"):
+            raise HttpError(401, "Invalid token")
+        access = create_access_token(user.pk, user.role)
+        refresh = create_refresh_token(user.pk)
 
     log_action(
         user=user,
         action="TOKEN_REFRESH",
-        ip_address=_get_ip(request),
+        ip_address=get_client_ip(request),
         details={},
     )
     return TokenOut(access_token=access, refresh_token=refresh)
@@ -203,7 +207,7 @@ def logout(request: HttpRequest, data: LogoutIn):
     log_action(
         user=user,
         action="LOGOUT",
-        ip_address=_get_ip(request),
+        ip_address=get_client_ip(request),
         details={},
     )
     return MessageOut(message="Logged out")
@@ -220,10 +224,3 @@ def logout(request: HttpRequest, data: LogoutIn):
 def me(request: HttpRequest):
     """Return the authenticated user's own profile. No sensitive fields."""
     return request.auth
-
-
-def _get_ip(request: HttpRequest) -> str | None:
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")

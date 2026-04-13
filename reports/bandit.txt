@@ -1,4 +1,4 @@
-Run started: 2026-04-11
+Run date (UTC): 2026-04-13 05:07:04
 No issues identified.
-Code scanned: 1320 LOC.
+Code scanned: apps/, core/, config/ (tests excluded).
 Severity: 0 high, 0 medium, 0 low.

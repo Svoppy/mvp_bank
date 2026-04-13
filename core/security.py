@@ -15,6 +15,8 @@ _BCRYPT_ROUNDS = 12
 
 ACCESS_TOKEN_TTL = timedelta(minutes=30)
 REFRESH_TOKEN_TTL = timedelta(days=7)
+JWT_ISSUER = os.environ.get("JWT_ISSUER", "mvp-bank-api")
+JWT_AUDIENCE = os.environ.get("JWT_AUDIENCE", "mvp-bank-clients")
 
 
 def hash_password(plain: str) -> str:
@@ -53,6 +55,8 @@ def create_access_token(user_id: int, role: str) -> str:
     payload = {
         "sub": str(user_id),
         "role": role,
+        "iss": JWT_ISSUER,
+        "aud": JWT_AUDIENCE,
         "iat": int(now.timestamp()),
         "exp": int((now + ACCESS_TOKEN_TTL).timestamp()),
         "type": "access",
@@ -65,6 +69,8 @@ def create_refresh_token(user_id: int) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
+        "iss": JWT_ISSUER,
+        "aud": JWT_AUDIENCE,
         "iat": int(now.timestamp()),
         "exp": int((now + REFRESH_TOKEN_TTL).timestamp()),
         "type": "refresh",
@@ -79,7 +85,16 @@ def decode_token(token: str) -> dict | None:
     Never raises — callers treat None as unauthenticated.
     """
     try:
-        payload = jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
+        payload = jwt.decode(
+            token,
+            _jwt_secret(),
+            algorithms=["HS256"],
+            audience=JWT_AUDIENCE,
+            issuer=JWT_ISSUER,
+            options={
+                "require": ["sub", "iss", "aud", "iat", "exp", "type", "jti"],
+            },
+        )
     except jwt.PyJWTError:
         return None
 
