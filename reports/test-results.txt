@@ -1,4 +1,26 @@
+Creating test database for alias 'default'...
+2026-04-13 05:07:05,607 WARNING django.request Forbidden: /api/audit/logs
+..2026-04-13 05:07:06,481 WARNING django.request Unauthorized: /api/auth/login
+2026-04-13 05:07:06,704 WARNING django.request Unauthorized: /api/auth/login
+2026-04-13 05:07:06,922 WARNING django.request Unauthorized: /api/auth/login
+2026-04-13 05:07:07,143 WARNING django.request Unauthorized: /api/auth/login
+2026-04-13 05:07:07,365 WARNING django.request Unauthorized: /api/auth/login
+2026-04-13 05:07:07,366 WARNING django.request Too Many Requests: /api/auth/login
+.2026-04-13 05:07:07,803 INFO apps.auth_app.api Login success: user_id=1 role=CLIENT
+2026-04-13 05:07:07,806 WARNING django.request Unauthorized: /api/auth/me
+2026-04-13 05:07:07,806 WARNING django.request Unauthorized: /api/auth/refresh
+.2026-04-13 05:07:08,245 INFO apps.auth_app.api Login success: user_id=1 role=CLIENT
+2026-04-13 05:07:08,247 WARNING django.request Unauthorized: /api/auth/refresh
+.2026-04-13 05:07:09,127 WARNING django.request Forbidden: /api/loans/
+2026-04-13 05:07:09,128 WARNING django.request Forbidden: /api/loans/1
+2026-04-13 05:07:09,131 WARNING django.request Forbidden: /api/loans/1/decision
+.2026-04-13 05:07:10,016 WARNING django.request Not Found: /api/loans/2
+.2026-04-13 05:07:10,895 INFO apps.loans.api Loan decision: loan_id=1 status=APPROVED manager_id=3
+.
+----------------------------------------------------------------------
+Ran 8 tests in 5.725s
+
+OK
+Destroying test database for alias 'default'...
 Found 8 test(s).
 System check identified no issues (0 silenced).
-Ran 8 tests in 8.277s.
-OK

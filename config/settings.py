@@ -7,10 +7,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+IS_TESTING = "test" in sys.argv
 SECRET_KEY = os.environ["SECRET_KEY"]
 JWT_SECRET = os.environ["JWT_SECRET"]
-DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
+DEBUG = _env_bool("DEBUG", False)
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
+TRUST_PROXY_HEADERS = _env_bool("TRUST_PROXY_HEADERS", False)
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -23,13 +37,15 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
 
 DB_ENGINE = os.environ.get("DB_ENGINE", "postgresql").lower()
 
-if "test" in sys.argv:
+if IS_TESTING:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -65,6 +81,31 @@ USE_TZ = True
 # Security: limit request body size to 1 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1_048_576
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 50
+
+# Security headers
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
+
+# Proxy trust is disabled by default to prevent spoofed forwarded headers.
+USE_X_FORWARDED_HOST = TRUST_PROXY_HEADERS
+if TRUST_PROXY_HEADERS:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if not DEBUG and not IS_TESTING:
+    SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", True)
+    CSRF_COOKIE_SECURE = _env_bool("CSRF_COOKIE_SECURE", True)
+    SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", True)
+    SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "31536000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", True)
+    SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", True)
+else:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
 
 LOGGING = {
     "version": 1,

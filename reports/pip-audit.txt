@@ -1,1 +1,4 @@
+Run date (UTC): 2026-04-13 05:07:54
+WARNING:pip_audit._cli:--no-deps is supported, but users are encouraged to fully hash their pinned dependencies
+WARNING:pip_audit._cli:Consider using a tool like `pip-compile`: https://pip-tools.readthedocs.io/en/latest/#using-hashes
 No known vulnerabilities found
