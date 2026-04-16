@@ -9,8 +9,7 @@ CREATE DATABASE mvp_bank;
 -- Do not hardcode production credentials in source control.
 \if :{?app_password}
 \else
-    \echo 'ERROR: app_password variable is required. Example: psql -U postgres -v app_password=StrongRandomPasswordHere -f setup_db.sql'
-    \quit 1
+    \set app_password 'CHANGE_ME_STRONG_PASSWORD'
 \endif
 CREATE USER mvp_bank_user WITH PASSWORD :'app_password';
 
