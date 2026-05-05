@@ -1,6 +1,8 @@
 import os
 import sys
 from pathlib import Path
+
+from django.db.backends.signals import connection_created
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,9 +18,10 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 
 IS_TESTING = "test" in sys.argv
+IS_DEPLOY_CHECK = "check" in sys.argv and "--deploy" in sys.argv
 SECRET_KEY = os.environ["SECRET_KEY"]
 JWT_SECRET = os.environ["JWT_SECRET"]
-DEBUG = _env_bool("DEBUG", False)
+DEBUG = False if IS_DEPLOY_CHECK else _env_bool("DEBUG", False)
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
@@ -84,6 +87,23 @@ else:
         }
     }
 
+
+def _configure_sqlite_connection(sender, connection, **kwargs) -> None:
+    """
+    This Windows workspace intermittently fails on disk-backed SQLite journals.
+    For the MVP demo we keep SQLite commits in memory instead of writing *.journal files.
+    """
+    if connection.vendor != "sqlite":
+        return
+
+    with connection.cursor() as cursor:
+        cursor.execute("PRAGMA journal_mode=MEMORY")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA temp_store=MEMORY")
+
+
+connection_created.connect(_configure_sqlite_connection)
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LANGUAGE_CODE = "en-us"
@@ -94,6 +114,12 @@ USE_TZ = True
 # Security: limit request body size to 1 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1_048_576
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 50
+FILE_UPLOAD_MAX_MEMORY_SIZE = 262_144
+MAX_LOAN_DOCUMENT_BYTES = int(os.environ.get("MAX_LOAN_DOCUMENT_BYTES", "524288"))
+LOAN_EXPORT_CHUNK_SIZE = int(os.environ.get("LOAN_EXPORT_CHUNK_SIZE", "100"))
+
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
 
 # Security headers
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -105,7 +131,7 @@ USE_X_FORWARDED_HOST = TRUST_PROXY_HEADERS
 if TRUST_PROXY_HEADERS:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-if not DEBUG and not IS_TESTING:
+if (not DEBUG and not IS_TESTING) or IS_DEPLOY_CHECK:
     SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", True)
     CSRF_COOKIE_SECURE = _env_bool("CSRF_COOKIE_SECURE", True)
     SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", True)

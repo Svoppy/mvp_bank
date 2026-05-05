@@ -12,3 +12,9 @@ test_db.sqlite3
 dist/
 .bandit
 pip-audit-report.txt
+media/
+.certs/
+.test-media/
+mvp-bank-test-media-*/
+python-write-check/
+.test-media/

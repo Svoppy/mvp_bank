@@ -1,6 +1,8 @@
 import json
 import secrets
+from unittest.mock import patch
 
+from django.db import DatabaseError
 from django.test import TestCase
 
 from apps.auth_app.models import Role, User
@@ -97,6 +99,22 @@ class AuthApiTests(TestCase):
 
         self.assertEqual(blocked_response.status_code, 429)
 
+    @patch("apps.auth_app.api.User.objects.create", side_effect=DatabaseError("db down"))
+    def test_register_returns_503_when_database_is_unavailable(self, _mock_create):
+        response = self.client.post(
+            "/api/auth/register",
+            data=json.dumps(
+                {
+                    "email": "newclient@example.com",
+                    "password": "Aa1!ClientPass99",
+                    "full_name": "New Client",
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 503)
+
     def test_swagger_docs_and_openapi_publish_all_mvp_routes(self):
         docs_response = self.client.get("/api/docs")
         self.assertEqual(docs_response.status_code, 200)
@@ -114,7 +132,9 @@ class AuthApiTests(TestCase):
         self.assertIn("/api/auth/me", schema["paths"])
         self.assertIn("/api/loans/apply", schema["paths"])
         self.assertIn("/api/loans/", schema["paths"])
+        self.assertIn("/api/loans/export.csv", schema["paths"])
         self.assertIn("/api/loans/{loan_id}", schema["paths"])
+        self.assertIn("/api/loans/{loan_id}/documents", schema["paths"])
         self.assertIn("/api/loans/{loan_id}/decision", schema["paths"])
         self.assertIn("/api/audit/logs", schema["paths"])
 

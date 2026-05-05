@@ -1,0 +1,27 @@
+Creating test database for alias 'default'...
+2026-04-27 17:25:38,994 WARNING django.request Forbidden: /api/audit/logs
+..2026-04-27 17:25:42,290 WARNING django.request Unauthorized: /api/auth/login
+2026-04-27 17:25:42,779 WARNING django.request Unauthorized: /api/auth/login
+2026-04-27 17:25:43,268 WARNING django.request Unauthorized: /api/auth/login
+2026-04-27 17:25:43,764 WARNING django.request Unauthorized: /api/auth/login
+2026-04-27 17:25:44,250 WARNING django.request Unauthorized: /api/auth/login
+2026-04-27 17:25:44,253 WARNING django.request Too Many Requests: /api/auth/login
+.2026-04-27 17:25:45,221 INFO apps.auth_app.api Login success: user_id=1 role=CLIENT
+2026-04-27 17:25:45,232 WARNING django.request Unauthorized: /api/auth/me
+2026-04-27 17:25:45,233 WARNING django.request Unauthorized: /api/auth/refresh
+.2026-04-27 17:25:46,209 INFO apps.auth_app.api Login success: user_id=1 role=CLIENT
+2026-04-27 17:25:46,218 WARNING django.request Unauthorized: /api/auth/refresh
+..2026-04-27 17:25:48,712 WARNING django.request Forbidden: /api/loans/
+2026-04-27 17:25:48,716 WARNING django.request Forbidden: /api/loans/1
+2026-04-27 17:25:48,718 WARNING django.request Forbidden: /api/loans/1/decision
+.2026-04-27 17:25:50,664 WARNING django.request Not Found: /api/loans/2
+....2026-04-27 17:25:58,475 WARNING django.request Request Entity Too Large: /api/loans/1/documents
+.2026-04-27 17:26:00,407 INFO apps.loans.api Loan decision: loan_id=1 status=APPROVED manager_id=3
+.
+----------------------------------------------------------------------
+Ran 13 tests in 22.417s
+
+OK
+Destroying test database for alias 'default'...
+Found 13 test(s).
+System check identified no issues (0 silenced).

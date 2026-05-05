@@ -1,0 +1,14 @@
+cd /c/projects/aitu/isscv/mvp3/mvp_bank
+source .venv/Scripts/activate
+
+export DB_ENGINE=sqlite
+export SQLITE_PATH='C:\projects\aitu\isscv\mvp3\mvp_bank\db.sqlite3'
+export DEBUG=False
+
+python manage.py makemigrations --check --dry-run
+python manage.py migrate
+python manage.py test
+python manage.py check --deploy
+
+PYTHONPATH="$(pwd)/.tools" ./.tools/bin/bandit.exe -r apps core config seed.py -f txt
+PYTHONPATH="$(pwd)/.tools" ./.tools/bin/pip-audit.exe -r requirements.txt --progress-spinner off

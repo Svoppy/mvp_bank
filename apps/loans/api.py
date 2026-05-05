@@ -8,14 +8,17 @@ Loan endpoints:
 import logging
 from typing import List
 
-from ninja import Router, Query
+from ninja import File, Router, Query
 from ninja.errors import HttpError
+from ninja.files import UploadedFile
 from django.db import transaction
 from django.http import HttpRequest
 
 from apps.auth_app.models import User
 from apps.loans.models import CreditApplication, ApplicationStatus
-from apps.loans.schemas import LoanApplyIn, DecisionIn, LoanOut
+from apps.loans.documents import store_loan_document
+from apps.loans.export import stream_loans_csv_response
+from apps.loans.schemas import DecisionIn, LoanApplyIn, LoanDocumentOut, LoanOut
 from apps.audit.service import log_action
 from core.schemas import ErrorOut
 from core.network import get_client_ip
@@ -92,6 +95,35 @@ def list_loans(
 
 
 @router.get(
+    "/export.csv",
+    response={200: str, 403: ErrorOut},
+    operation_id="exportLoanApplicationsCsv",
+    summary="Export visible loan applications as CSV",
+    description=(
+        "Streams CSV rows without loading the whole queryset into memory. "
+        "CLIENT exports only own records; MANAGER exports all records; ADMIN is denied."
+    ),
+)
+def export_loans_csv(request: HttpRequest):
+    user: User = request.auth
+    if user.role == "CLIENT":
+        qs = CreditApplication.objects.filter(client=user).order_by("id")
+    elif user.role == "MANAGER":
+        qs = CreditApplication.objects.all().order_by("id")
+    else:
+        raise HttpError(403, "Forbidden: insufficient permissions")
+
+    log_action(
+        user=user,
+        action="LOAN_EXPORT_CSV",
+        entity_type="CreditApplication",
+        ip_address=get_client_ip(request),
+        details={"role": user.role},
+    )
+    return stream_loans_csv_response(qs)
+
+
+@router.get(
     "/{loan_id}",
     response={200: LoanOut, 403: ErrorOut, 404: ErrorOut},
     operation_id="getLoanApplication",
@@ -110,6 +142,43 @@ def get_loan(request: HttpRequest, loan_id: int):
     loan = _get_loan_or_404(loan_id)
     _assert_can_view(user, loan)
     return loan
+
+
+@router.post(
+    "/{loan_id}/documents",
+    response={201: LoanDocumentOut, 400: ErrorOut, 403: ErrorOut, 404: ErrorOut, 413: ErrorOut, 415: ErrorOut},
+    operation_id="uploadLoanDocument",
+    summary="Upload a supporting document",
+    description=(
+        "CLIENT-only upload for an owned loan application. "
+        "File size, extension-independent content type, magic bytes, and storage path are validated."
+    ),
+)
+def upload_loan_document(
+    request: HttpRequest,
+    loan_id: int,
+    file: UploadedFile = File(...),
+):
+    user: User = request.auth
+    loan = _get_loan_or_404(loan_id)
+    if user.role != "CLIENT":
+        raise HttpError(403, "Forbidden: clients only")
+    _assert_can_view(user, loan)
+
+    document = store_loan_document(loan=loan, uploaded_by=user, uploaded_file=file)
+    log_action(
+        user=user,
+        action="LOAN_DOCUMENT_UPLOAD",
+        entity_type="LoanDocument",
+        entity_id=document.pk,
+        ip_address=get_client_ip(request),
+        details={
+            "loan_id": loan.pk,
+            "content_type": document.content_type,
+            "size_bytes": document.size_bytes,
+        },
+    )
+    return 201, document
 
 
 @router.patch(

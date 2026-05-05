@@ -10,7 +10,7 @@ import logging
 
 from ninja import Router
 from ninja.errors import HttpError
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.http import HttpRequest
 
 from apps.auth_app.models import User, Role
@@ -50,7 +50,7 @@ router = Router(tags=["Auth"])
 
 @router.post(
     "/register",
-    response={201: UserOut, 400: ErrorOut},
+    response={201: UserOut, 400: ErrorOut, 503: ErrorOut},
     auth=None,
     operation_id="registerClient",
     summary="Register a client",
@@ -63,16 +63,20 @@ def register(request: HttpRequest, data: RegisterIn):
     """Register a new client account."""
     email = normalize_email(data.email)
 
-    if User.objects.filter(email=email).exists():
-        # Neutral message — don't reveal whether email exists
-        raise HttpError(400, "Registration failed. Please check your data.")
+    try:
+        if User.objects.filter(email=email).exists():
+            # Neutral message — don't reveal whether email exists
+            raise HttpError(400, "Registration failed. Please check your data.")
 
-    user = User.objects.create(
-        email=email,
-        hashed_password=hash_password(data.password),
-        role=Role.CLIENT,
-        full_name=data.full_name,
-    )
+        user = User.objects.create(
+            email=email,
+            hashed_password=hash_password(data.password),
+            role=Role.CLIENT,
+            full_name=data.full_name,
+        )
+    except DatabaseError:
+        logger.exception("Registration failed due to database error")
+        raise HttpError(503, "Service temporarily unavailable. Try again later.")
 
     log_action(
         user=user,

@@ -35,4 +35,32 @@ class CreditApplication(models.Model):
         db_table = "credit_applications"
 
     def __str__(self):
-        return f"Application #{self.pk} — {self.status}"
+        return f"Application #{self.pk} - {self.status}"
+
+
+class LoanDocument(models.Model):
+    loan = models.ForeignKey(
+        CreditApplication,
+        on_delete=models.CASCADE,
+        related_name="documents",
+    )
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="uploaded_loan_documents",
+    )
+    original_name = models.CharField(max_length=120)
+    stored_name = models.CharField(max_length=100, unique=True)
+    content_type = models.CharField(max_length=100)
+    size_bytes = models.PositiveIntegerField()
+    sha256 = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "loan_documents"
+        indexes = [
+            models.Index(fields=["loan", "created_at"], name="loan_docume_loan_id_82aa4c_idx"),
+        ]
+
+    def __str__(self):
+        return f"Document #{self.pk} for loan #{self.loan_id}"

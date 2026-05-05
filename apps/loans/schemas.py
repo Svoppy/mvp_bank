@@ -71,3 +71,27 @@ class LoanOut(BaseModel):
             }
         }
         from_attributes = True
+
+
+class LoanDocumentOut(BaseModel):
+    id: int
+    loan_id: int
+    original_name: str
+    content_type: str
+    size_bytes: int
+    sha256: str
+    created_at: datetime
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "loan_id": 10,
+                "original_name": "income.pdf",
+                "content_type": "application/pdf",
+                "size_bytes": 128000,
+                "sha256": "a" * 64,
+                "created_at": "2026-04-20T10:00:00Z",
+            }
+        }
+        from_attributes = True

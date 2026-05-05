@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "C:\projects\aitu\isscv\mvp3\mvp_bank\scripts\run_https.py", line 5, in <module>
+    import ssl
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\ssl.py", line 100, in <module>
+    import _ssl             # if we can't import it, let the error propagate
+    ^^^^^^^^^^^
+ImportError: DLL load failed while importing _ssl: Произошел сбой в программе инициализации библиотеки динамической компоновки (DLL).
+Traceback (most recent call last):
+  File "C:\projects\aitu\isscv\mvp3\mvp_bank\scripts\run_https.py", line 5, in <module>
+    import ssl
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\ssl.py", line 100, in <module>
+    import _ssl             # if we can't import it, let the error propagate
+    ^^^^^^^^^^^
+ImportError: DLL load failed while importing _ssl: Произошел сбой в программе инициализации библиотеки динамической компоновки (DLL).

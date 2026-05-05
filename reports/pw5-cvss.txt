@@ -1,0 +1,37 @@
+Official calculator: https://www.first.org/cvss/calculator/4.0
+Date: 2026-05-04
+
+1. Unbounded upload of large files
+   Endpoint: POST /api/loans/{loan_id}/documents
+   CWE: CWE-770
+   Vector: CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N
+   Score: 7.1
+   Severity: High
+
+2. Unsafe file path handling for uploaded names
+   Endpoint: POST /api/loans/{loan_id}/documents
+   CWE: CWE-22
+   Vector: CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N
+   Score: 7.1
+   Severity: High
+
+3. Trusting MIME type without content validation
+   Endpoint: POST /api/loans/{loan_id}/documents
+   CWE: CWE-434
+   Vector: CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N
+   Score: 5.3
+   Severity: Medium
+
+4. CSV formula injection in export
+   Endpoint: GET /api/loans/export.csv
+   CWE: CWE-1236
+   Vector: CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N
+   Score: 5.1
+   Severity: Medium
+
+5. Spoofed X-Forwarded-For in security decisions
+   Module: core/network.py
+   CWE: CWE-807
+   Vector: CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N
+   Score: 6.9
+   Severity: Medium
