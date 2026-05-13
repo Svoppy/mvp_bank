@@ -34,6 +34,10 @@ class CreditApplication(models.Model):
     class Meta:
         db_table = "credit_applications"
 
+    @property
+    def client_email(self) -> str:
+        return self.client.email
+
     def __str__(self):
         return f"Application #{self.pk} - {self.status}"
 

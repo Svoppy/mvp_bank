@@ -1,8 +1,11 @@
 from ninja import NinjaAPI
 from ninja.openapi.docs import Swagger
+from django.urls import path
+
 from apps.auth_app.api import router as auth_router
 from apps.loans.api import router as loans_router
 from apps.audit.api import router as audit_router
+from config.web_views import healthz, index
 
 api = NinjaAPI(
     title="MVP Bank - Credit Approval API",
@@ -44,7 +47,8 @@ api.add_router("/auth", auth_router)
 api.add_router("/loans", loans_router)
 api.add_router("/audit", audit_router)
 
-from django.urls import path
 urlpatterns = [
+    path("", index, name="index"),
+    path("healthz", healthz, name="healthz"),
     path("api/", api.urls),
 ]

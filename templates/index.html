@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ app_name }}</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f4f7fb;
+            --surface: #ffffff;
+            --surface-alt: #eef3f9;
+            --border: #d8e1ec;
+            --text: #18212b;
+            --muted: #5d6b7b;
+            --accent: #1d5fd0;
+            --accent-strong: #1548a0;
+            --danger: #b42318;
+            --ok: #067647;
+            --shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .page {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .topbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .title-block p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+            gap: 18px;
+        }
+
+        .stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-alt);
+        }
+
+        .panel-header h2,
+        .panel-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .panel-body {
+            padding: 16px 18px 18px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            min-height: 88px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat .label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .stat .value {
+            margin-top: 8px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            margin-top: 6px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font: inherit;
+            color: var(--text);
+            background: #fff;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            border: 0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font: inherit;
+            cursor: pointer;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        button.secondary {
+            background: #dde7f5;
+            color: var(--text);
+        }
+
+        button.danger {
+            background: var(--danger);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .status-line {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fafcff;
+            font-size: 14px;
+        }
+
+        .status-line.error {
+            border-color: #f1b2af;
+            background: #fff4f2;
+            color: var(--danger);
+        }
+
+        .status-line.ok {
+            border-color: #9dd8ba;
+            background: #edfdf3;
+            color: var(--ok);
+        }
+
+        .role-pill {
+            display: inline-flex;
+            align-items: center;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #dde7f5;
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 960px;
+            background: #fff;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f7faff;
+            color: var(--muted);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .cell-stack {
+            display: grid;
+            gap: 8px;
+        }
+
+        .actions-cell {
+            display: grid;
+            gap: 8px;
+            min-width: 220px;
+        }
+
+        .actions-cell textarea,
+        .actions-cell input {
+            min-width: 0;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .mono {
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        .link-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 14px;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1120px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                padding: 14px;
+            }
+
+            .stats,
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .title-block h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="topbar">
+        <div class="title-block">
+            <h1>{{ app_name }}</h1>
+            <p>Credit approval workflow with role-based access control and audit logging.</p>
+        </div>
+        <div class="actions">
+            <span class="role-pill" id="role-pill">Guest</span>
+            <button class="secondary" id="refresh-screen-btn" type="button">Refresh</button>
+            <button class="danger hidden" id="logout-btn" type="button">Logout</button>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="label">API</div>
+            <div class="value" id="api-state">Ready</div>
+        </div>
+        <div class="stat">
+            <div class="label">Visible loans</div>
+            <div class="value" id="loan-count">0</div>
+        </div>
+        <div class="stat">
+            <div class="label">Pending</div>
+            <div class="value" id="pending-count">0</div>
+        </div>
+        <div class="stat">
+            <div class="label">Audit rows</div>
+            <div class="value" id="audit-count">0</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <div class="stack">
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>Session</h2>
+                </div>
+                <div class="panel-body">
+                    <div id="status-box" class="status-line">Not authenticated.</div>
+                    <div class="link-row" style="margin-top: 12px;">
+                        <a href="{{ api_base }}/docs" target="_blank" rel="noreferrer">Swagger</a>
+                        <a href="/healthz" target="_blank" rel="noreferrer">Health</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" id="login-panel">
+                <div class="panel-header">
+                    <h2>Login</h2>
+                </div>
+                <div class="panel-body">
+                    <form id="login-form">
+                        <label>Email
+                            <input type="email" name="email" required>
+                        </label>
+                        <label>Password
+                            <input type="password" name="password" required>
+                        </label>
+                        <div class="toolbar">
+                            <button type="submit">Sign in</button>
+                            <button class="secondary" id="refresh-token-btn" type="button">Rotate token</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="panel" id="register-panel">
+                <div class="panel-header">
+                    <h2>Client Registration</h2>
+                </div>
+                <div class="panel-body">
+                    <form id="register-form">
+                        <label>Full name
+                            <input type="text" name="full_name" maxlength="200" required>
+                        </label>
+                        <label>Email
+                            <input type="email" name="email" required>
+                        </label>
+                        <label>Password
+                            <input type="password" name="password" minlength="8" maxlength="72" required>
+                        </label>
+                        <button type="submit">Create client account</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="panel hidden" id="apply-panel">
+                <div class="panel-header">
+                    <h2>New Loan Application</h2>
+                </div>
+                <div class="panel-body">
+                    <form id="apply-form">
+                        <label>Amount
+                            <input type="number" step="0.01" min="0.01" max="50000000" name="amount" required>
+                        </label>
+                        <label>Term (months)
+                            <input type="number" min="1" max="360" name="term_months" required>
+                        </label>
+                        <label>Purpose
+                            <textarea name="purpose" maxlength="500" required></textarea>
+                        </label>
+                        <button type="submit">Submit application</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+        <div class="stack">
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>Loans</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="toolbar">
+                        <button id="load-loans-btn" type="button">Load loans</button>
+                        <button class="secondary" id="export-loans-btn" type="button">Export CSV</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Amount</th>
+                                <th>Term</th>
+                                <th>Purpose</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="loan-table-body">
+                            <tr>
+                                <td colspan="8" class="muted">No data loaded.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel hidden" id="audit-panel">
+                <div class="panel-header">
+                    <h2>Audit Log</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="toolbar">
+                        <button id="load-audit-btn" type="button">Load audit log</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>User</th>
+                                <th>Entity</th>
+                                <th>IP</th>
+                                <th>Details</th>
+                            </tr>
+                            </thead>
+                            <tbody id="audit-table-body">
+                            <tr>
+                                <td colspan="6" class="muted">Admin access required.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    const apiBase = "{{ api_base }}";
+    const state = {
+        accessToken: sessionStorage.getItem("access_token") || "",
+        refreshToken: sessionStorage.getItem("refresh_token") || "",
+        user: null,
+        loans: [],
+        audit: []
+    };
+
+    const elements = {
+        apiState: document.getElementById("api-state"),
+        loanCount: document.getElementById("loan-count"),
+        pendingCount: document.getElementById("pending-count"),
+        auditCount: document.getElementById("audit-count"),
+        rolePill: document.getElementById("role-pill"),
+        statusBox: document.getElementById("status-box"),
+        logoutBtn: document.getElementById("logout-btn"),
+        applyPanel: document.getElementById("apply-panel"),
+        auditPanel: document.getElementById("audit-panel"),
+        loginPanel: document.getElementById("login-panel"),
+        registerPanel: document.getElementById("register-panel"),
+        loanTableBody: document.getElementById("loan-table-body"),
+        auditTableBody: document.getElementById("audit-table-body")
+    };
+
+    function setTokens(accessToken, refreshToken) {
+        state.accessToken = accessToken || "";
+        state.refreshToken = refreshToken || "";
+        if (state.accessToken) {
+            sessionStorage.setItem("access_token", state.accessToken);
+        } else {
+            sessionStorage.removeItem("access_token");
+        }
+        if (state.refreshToken) {
+            sessionStorage.setItem("refresh_token", state.refreshToken);
+        } else {
+            sessionStorage.removeItem("refresh_token");
+        }
+    }
+
+    function setStatus(message, type = "") {
+        elements.statusBox.textContent = message;
+        elements.statusBox.className = "status-line" + (type ? " " + type : "");
+    }
+
+    function updateShell() {
+        const role = state.user?.role || "Guest";
+        elements.rolePill.textContent = role;
+        elements.logoutBtn.classList.toggle("hidden", !state.accessToken);
+        elements.applyPanel.classList.toggle("hidden", role !== "CLIENT");
+        elements.auditPanel.classList.toggle("hidden", role !== "ADMIN");
+        elements.loginPanel.classList.toggle("hidden", Boolean(state.accessToken));
+        elements.registerPanel.classList.toggle("hidden", Boolean(state.accessToken));
+        elements.loanCount.textContent = String(state.loans.length);
+        elements.pendingCount.textContent = String(state.loans.filter(item => item.status === "PENDING").length);
+        elements.auditCount.textContent = String(state.audit.length);
+    }
+
+    async function apiFetch(path, options = {}) {
+        const headers = new Headers(options.headers || {});
+        if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
+            headers.set("Content-Type", "application/json");
+        }
+        if (state.accessToken && !headers.has("Authorization")) {
+            headers.set("Authorization", `Bearer ${state.accessToken}`);
+        }
+
+        const response = await fetch(`${apiBase}${path}`, {
+            ...options,
+            headers
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+        const payload = contentType.includes("application/json")
+            ? await response.json().catch(() => ({}))
+            : await response.text().catch(() => "");
+
+        if (!response.ok) {
+            const detail = typeof payload === "object" && payload?.detail ? payload.detail : response.statusText;
+            throw new Error(detail || "Request failed");
+        }
+        return payload;
+    }
+
+    async function loadProfile() {
+        if (!state.accessToken) {
+            state.user = null;
+            updateShell();
+            return;
+        }
+        try {
+            state.user = await apiFetch("/auth/me", {method: "GET"});
+            setStatus(`Signed in as ${state.user.full_name} (${state.user.email}).`, "ok");
+            elements.apiState.textContent = "Online";
+        } catch (error) {
+            setTokens("", "");
+            state.user = null;
+            setStatus(error.message, "error");
+            elements.apiState.textContent = "Auth required";
+        }
+        updateShell();
+    }
+
+    function renderLoans() {
+        if (!state.loans.length) {
+            elements.loanTableBody.innerHTML = '<tr><td colspan="8" class="muted">No loan data available.</td></tr>';
+            updateShell();
+            return;
+        }
+
+        elements.loanTableBody.innerHTML = state.loans.map((loan) => {
+            const decisionControls = state.user?.role === "MANAGER" && loan.status === "PENDING"
+                ? `
+                    <div class="actions-cell">
+                        <textarea id="decision-comment-${loan.id}" placeholder="Decision comment"></textarea>
+                        <div class="toolbar">
+                            <button type="button" onclick="submitDecision(${loan.id}, 'APPROVED')">Approve</button>
+                            <button type="button" class="danger" onclick="submitDecision(${loan.id}, 'REJECTED')">Reject</button>
+                        </div>
+                    </div>
+                `
+                : "";
+
+            const uploadControl = state.user?.role === "CLIENT"
+                ? `
+                    <div class="actions-cell">
+                        <input type="file" id="document-${loan.id}" accept=".pdf,.png,.jpg,.jpeg">
+                        <button type="button" class="secondary" onclick="uploadDocument(${loan.id})">Upload file</button>
+                    </div>
+                `
+                : "";
+
+            return `
+                <tr>
+                    <td>${loan.id}</td>
+                    <td>${loan.client_email || '<span class="muted">hidden</span>'}</td>
+                    <td>${loan.amount}</td>
+                    <td>${loan.term_months}</td>
+                    <td>${escapeHtml(loan.purpose)}</td>
+                    <td>${loan.status}</td>
+                    <td class="mono">${new Date(loan.updated_at).toLocaleString()}</td>
+                    <td>${decisionControls || uploadControl || '<span class="muted">No actions</span>'}</td>
+                </tr>
+            `;
+        }).join("");
+        updateShell();
+    }
+
+    function renderAudit() {
+        if (!state.audit.length) {
+            elements.auditTableBody.innerHTML = '<tr><td colspan="6" class="muted">No audit records loaded.</td></tr>';
+            updateShell();
+            return;
+        }
+        elements.auditTableBody.innerHTML = state.audit.map((row) => `
+            <tr>
+                <td class="mono">${new Date(row.timestamp).toLocaleString()}</td>
+                <td>${row.action}</td>
+                <td>${row.user_id || '<span class="muted">system</span>'}</td>
+                <td>${row.entity_type || ''} ${row.entity_id || ''}</td>
+                <td>${row.ip_address || ''}</td>
+                <td class="mono">${escapeHtml(JSON.stringify(row.details))}</td>
+            </tr>
+        `).join("");
+        updateShell();
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    async function loadLoans() {
+        if (!state.accessToken) {
+            setStatus("Authentication required.", "error");
+            return;
+        }
+        try {
+            state.loans = await apiFetch("/loans/", {method: "GET"});
+            renderLoans();
+            setStatus(`Loaded ${state.loans.length} loans.`, "ok");
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    }
+
+    async function loadAudit() {
+        if (state.user?.role !== "ADMIN") {
+            setStatus("Admin role required.", "error");
+            return;
+        }
+        try {
+            state.audit = await apiFetch("/audit/logs", {method: "GET"});
+            renderAudit();
+            setStatus(`Loaded ${state.audit.length} audit records.`, "ok");
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    }
+
+    async function submitDecision(loanId, status) {
+        try {
+            const comment = document.getElementById(`decision-comment-${loanId}`).value;
+            await apiFetch(`/loans/${loanId}/decision`, {
+                method: "PATCH",
+                body: JSON.stringify({status, comment})
+            });
+            setStatus(`Loan ${loanId} marked as ${status}.`, "ok");
+            await loadLoans();
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    }
+
+    async function uploadDocument(loanId) {
+        const fileInput = document.getElementById(`document-${loanId}`);
+        if (!fileInput?.files?.length) {
+            setStatus("Select a file first.", "error");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        try {
+            await apiFetch(`/loans/${loanId}/documents`, {
+                method: "POST",
+                body: formData
+            });
+            setStatus(`Document uploaded for loan ${loanId}.`, "ok");
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    }
+
+    async function exportCsv() {
+        if (!state.accessToken) {
+            setStatus("Authentication required.", "error");
+            return;
+        }
+        try {
+            const response = await fetch(`${apiBase}/loans/export.csv`, {
+                headers: {
+                    Authorization: `Bearer ${state.accessToken}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error("Export failed");
+            }
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = "loan-applications.csv";
+            anchor.click();
+            URL.revokeObjectURL(url);
+            setStatus("CSV export created.", "ok");
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        try {
+            const payload = await apiFetch("/auth/login", {
+                method: "POST",
+                body: JSON.stringify({
+                    email: form.get("email"),
+                    password: form.get("password")
+                })
+            });
+            setTokens(payload.access_token, payload.refresh_token);
+            await loadProfile();
+            await loadLoans();
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    });
+
+    document.getElementById("register-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        try {
+            await apiFetch("/auth/register", {
+                method: "POST",
+                body: JSON.stringify({
+                    email: form.get("email"),
+                    password: form.get("password"),
+                    full_name: form.get("full_name")
+                })
+            });
+            setStatus("Client account created. You can sign in now.", "ok");
+            event.currentTarget.reset();
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    });
+
+    document.getElementById("apply-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        try {
+            await apiFetch("/loans/apply", {
+                method: "POST",
+                body: JSON.stringify({
+                    amount: form.get("amount"),
+                    term_months: Number(form.get("term_months")),
+                    purpose: form.get("purpose")
+                })
+            });
+            setStatus("Loan application submitted.", "ok");
+            event.currentTarget.reset();
+            await loadLoans();
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    });
+
+    document.getElementById("refresh-token-btn").addEventListener("click", async () => {
+        if (!state.refreshToken) {
+            setStatus("No refresh token available.", "error");
+            return;
+        }
+        try {
+            const payload = await apiFetch("/auth/refresh", {
+                method: "POST",
+                body: JSON.stringify({refresh_token: state.refreshToken})
+            });
+            setTokens(payload.access_token, payload.refresh_token);
+            await loadProfile();
+            setStatus("Token rotated.", "ok");
+        } catch (error) {
+            setStatus(error.message, "error");
+        }
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+        try {
+            if (state.accessToken) {
+                await apiFetch("/auth/logout", {
+                    method: "POST",
+                    body: JSON.stringify({refresh_token: state.refreshToken || null})
+                });
+            }
+        } catch (_error) {
+            // Ignore logout cleanup errors and clear local state anyway.
+        }
+        state.user = null;
+        state.loans = [];
+        state.audit = [];
+        setTokens("", "");
+        renderLoans();
+        renderAudit();
+        setStatus("Signed out.");
+        updateShell();
+    });
+
+    document.getElementById("load-loans-btn").addEventListener("click", loadLoans);
+    document.getElementById("load-audit-btn").addEventListener("click", loadAudit);
+    document.getElementById("export-loans-btn").addEventListener("click", exportCsv);
+    document.getElementById("refresh-screen-btn").addEventListener("click", async () => {
+        await loadProfile();
+        if (state.user?.role) {
+            await loadLoans();
+            if (state.user.role === "ADMIN") {
+                await loadAudit();
+            }
+        }
+    });
+
+    window.submitDecision = submitDecision;
+    window.uploadDocument = uploadDocument;
+
+    renderLoans();
+    renderAudit();
+    loadProfile();
+</script>
+</body>
+</html>

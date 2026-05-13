@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mvp-bank-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mvp_bank}
+      POSTGRES_USER: ${DB_USER:-mvp_bank_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mvp_bank_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mvp_bank_user} -d ${DB_NAME:-mvp_bank}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mvp-bank-web
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_ENGINE: postgresql
+      DB_HOST: db
+      DB_PORT: 5432
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0
+      SECURE_SSL_REDIRECT: "False"
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+      SECURE_HSTS_SECONDS: "0"
+      SECURE_HSTS_INCLUDE_SUBDOMAINS: "False"
+      SECURE_HSTS_PRELOAD: "False"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz').read()\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    command: >
+      sh -c "python manage.py migrate &&
+             python seed.py &&
+             python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  postgres_data:

@@ -1,2 +1,28 @@
-[11/Apr/2026 16:03:29] "GET /api/openapi.json HTTP/1.1" 200 9248
-[11/Apr/2026 16:03:29,771] - Broken pipe from ('127.0.0.1', 62601)
+Traceback (most recent call last):
+  File "C:\projects\aitu\isscv\mvp3\mvp_bank\manage.py", line 11, in main
+    from django.core.management import execute_from_command_line
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\management\__init__.py", line 19, in <module>
+    from django.core.management.base import (
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\management\base.py", line 14, in <module>
+    from django.core import checks
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\checks\__init__.py", line 18, in <module>
+    import django.core.checks.caches  # NOQA isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\checks\caches.py", line 5, in <module>
+    from django.core.cache.backends.filebased import FileBasedCache
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\cache\backends\filebased.py", line 13, in <module>
+    from django.core.files import locks
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\files\locks.py", line 32, in <module>
+    from ctypes import (
+  File "C:\Users\User\AppData\Local\Programs\Python\Python312\Lib\ctypes\__init__.py", line 8, in <module>
+    from _ctypes import Union, Structure, Array
+ImportError: DLL load failed while importing _ctypes: ¬нутренн€€ ошибка.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\projects\aitu\isscv\mvp3\mvp_bank\manage.py", line 22, in <module>
+    main()
+  File "C:\projects\aitu\isscv\mvp3\mvp_bank\manage.py", line 13, in main
+    raise ImportError(
+ImportError: Couldn't import Django. Are you sure it's installed and available on your PYTHONPATH environment variable? Did you forget to activate a virtual environment?

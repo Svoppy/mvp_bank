@@ -51,6 +51,7 @@ class DecisionIn(BaseModel):
 
 class LoanOut(BaseModel):
     id: int
+    client_email: str | None = None
     amount: Decimal
     term_months: int
     purpose: str
@@ -62,6 +63,7 @@ class LoanOut(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": 1,
+                "client_email": "client@example.com",
                 "amount": "350000.00",
                 "term_months": 24,
                 "purpose": "Home renovation",

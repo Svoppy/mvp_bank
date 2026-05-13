@@ -18,3 +18,10 @@ media/
 mvp-bank-test-media-*/
 python-write-check/
 .test-media/
+.audit-tmp/
+runtime.sqlite3
+data/
+reports/runserver-*.log
+reports/runserver-*.err.log
+reports/runhttps-*.log
+reports/runhttps-*.err.log

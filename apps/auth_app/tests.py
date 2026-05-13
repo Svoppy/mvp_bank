@@ -142,3 +142,20 @@ class AuthApiTests(TestCase):
         self.assertTrue(
             any(item.get("type") == "http" and item.get("scheme") == "bearer" for item in security_schemes)
         )
+
+    def test_root_ui_and_health_endpoint_are_available(self):
+        index_response = self.client.get("/")
+        self.assertEqual(index_response.status_code, 200)
+        self.assertContains(index_response, "MVP Bank")
+        self.assertContains(index_response, "Credit approval workflow")
+
+        health_response = self.client.get("/healthz")
+        self.assertEqual(health_response.status_code, 200)
+        self.assertEqual(
+            health_response.json(),
+            {
+                "status": "ok",
+                "service": "mvp-bank",
+                "api_docs": "/api/docs",
+            },
+        )
